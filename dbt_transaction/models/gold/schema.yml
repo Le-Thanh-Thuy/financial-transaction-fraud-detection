@@ -1,0 +1,10 @@
+models:
+  - name: gold_user_risk
+    columns:
+      - name: user_id
+        tests:
+          - not_null
+      - name: rule_risk_flag
+        tests:
+          - accepted_values:
+              values: [0,1]

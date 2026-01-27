@@ -1,0 +1,9 @@
+name: transaction_dbt
+version: 1.0
+profile: transaction
+models:
+  transaction_dbt:
+    staging:
+      materialized: view
+    gold:
+      materialized: table
