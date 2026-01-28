@@ -2,6 +2,3 @@ setup_env.sh
 venv/
 run_pipeline.sh
 spark-data/source
-spark-data/bronze
-spark-data/silver
-spark-data/feature
