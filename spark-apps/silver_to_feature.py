@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
 
-spark = SparkSession.builder.appName("FeatureEngineering").config("spark.driver.memory", "4g").config("spark.executor.memory", "4g").getOrCreate()
+spark = SparkSession.builder.appName("FeatureEngineering").config("spark.driver.memory", "8g").config("spark.executor.memory", "8g").getOrCreate()
 
 df = spark.read.parquet("spark-data/silver/transaction_clean")
 
