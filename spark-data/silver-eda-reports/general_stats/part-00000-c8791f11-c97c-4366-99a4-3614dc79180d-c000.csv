@@ -1,0 +1,2 @@
+total_rows,fraud_rows,fraud_rate_percentage,avg_amount,min_amount,max_amount,std_amount
+6362620,8213,0.129 %,179861.904,0.0,9.244551664E7,603858.231

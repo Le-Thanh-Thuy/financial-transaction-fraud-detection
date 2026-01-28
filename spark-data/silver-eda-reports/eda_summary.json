@@ -1,0 +1,14 @@
+{
+    "dataset_shape": [
+        6362620,
+        11
+    ],
+    "data_types": {
+        "int": 3,
+        "string": 3,
+        "double": 5
+    },
+    "fraud_percentage": 0.12908204481801522,
+    "execution_date": "2026-01-28 13:52:49",
+    "processing_time_sec": 98.8389
+}
