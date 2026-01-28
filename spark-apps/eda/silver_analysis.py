@@ -106,21 +106,39 @@ def compute_and_save_value_behavior(df):
         .csv(f"{CONFIG['output_dirs']['reports']}/value_behavior_stats")
 
 def compute_and_save_time_behavior(df):
-    print_header("Time-based Behavior Analysis (Step-by-Step Stats)")
+    print_header("Time-based Behavior Analysis (Hour & DayOfWeek)")
     
-    time_stats = df.filter(col(CONFIG['target_col']) == 1) \
-        .groupBy("step") \
-        .agg(
-            count("*").alias("fraud_count"),
-            sum("amount").alias("total_fraud_amount"),
-            avg("amount").alias("avg_fraud_amount")
-        ).orderBy(col("fraud_count").desc())
+    # 1. Trích xuất Hour và Day từ step
+    # Giả định: step 1 = giờ đầu tiên của ngày đầu tiên
+    time_df = df.filter(F.col(CONFIG['target_col']) == 1) \
+        .withColumn("hour_of_day", F.col("step") % 24) \
+        .withColumn("day_of_week", (F.col("step") / 24).cast("int") % 7)
+
+    # 2. Thống kê theo Hour of Day (Giờ nào hay bị gian lận nhất?)
+    print("\n[1] Fraud Stats by Hour of Day (0-23):")
+    hour_stats = time_df.groupBy("hour_of_day").agg(
+        F.count("*").alias("fraud_count"),
+        F.round(F.sum("amount"), 2).alias("total_fraud_amount"),
+        F.round(F.avg("amount"), 2).alias("avg_fraud_amount")
+    ).orderBy(F.col("fraud_count").desc())
+    hour_stats.show(24)
+
+    # 3. Thống kê theo Day of Week (Thứ mấy hay bị gian lận nhất?)
+    print("\n[2] Fraud Stats by Day of Week:")
+    day_stats = time_df.groupBy("day_of_week").agg(
+        F.count("*").alias("fraud_count"),
+        F.round(F.sum("amount"), 2).alias("total_fraud_amount")
+    ).orderBy(F.col("day_of_week").asc())
+    day_stats.show()
+
+    # 4. Lưu báo cáo
+    hour_stats.coalesce(1).write.mode("overwrite").option("header", "true") \
+        .csv(f"{CONFIG['output_dirs']['reports']}/fraud_by_hour")
     
-    time_stats.show(20)
-    
-    time_stats.coalesce(1).write.mode("overwrite") \
-        .option("header", "true") \
-        .csv(f"{CONFIG['output_dirs']['reports']}/time_behavior_stats")
+    day_stats.coalesce(1).write.mode("overwrite").option("header", "true") \
+        .csv(f"{CONFIG['output_dirs']['reports']}/fraud_by_day")
+
+    print(f"Time-based reports saved to {CONFIG['output_dirs']['reports']}")
 
 def compute_null_metrics(df):
     print_header("Data Quality Metrics (Null Counts)")
