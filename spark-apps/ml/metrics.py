@@ -35,12 +35,11 @@ def evaluate_spark_model(predictions):
     print(f"AUC : {round(auc, 6)}")
 
     results = {
-        "Model": name,
-        "Accuracy": acc,
-        "Prec_Normal": class_metrics['Precision_Class_0'],
-        "Rec_Normal": class_metrics['Recall_Class_0'],
-        "Prec_Fraud": class_metrics['Precision_Class_1'],
-        "Rec_Fraud": class_metrics['Recall_Class_1'],
+        "Accuracy": metrics.accuracy,
+        "Prec_Normal": class_metrics['Prec_0'],
+        "Rec_Normal": class_metrics['Rec_0'],
+        "Prec_Fraud": class_metrics['Prec_1'],
+        "Rec_Fraud": class_metrics['Rec_1'],
         "Macro_Recall": macro_recall,
         "F1_Score": metrics.weightedFMeasure(),
         "AUC": auc

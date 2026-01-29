@@ -9,13 +9,16 @@ from pyspark.ml.feature import VectorAssembler, ChiSqSelector
 from pyspark.sql.functions import approx_count_distinct, col
 from pyspark.sql import functions as F, SparkSession
 import gc, os
+import pandas as pd
 
 def main():
     spark = SparkSession.builder \
         .appName("FraudDetectionTraining") \
         .config("spark.driver.memory", "4g") \
         .config("spark.executor.memory", "4g") \
+        .config("spark.memory.fraction", "0.6") \
         .getOrCreate()
+    spark.conf.set("parquet.block.size", 128 * 1024 * 1024)
     
     # 1. Load Data & Split
     df = spark.read.parquet(DATA_PATH).filter(col("type").isin("CASH_OUT", "TRANSFER"))
@@ -55,15 +58,14 @@ def main():
     final_features_col = "final_features"
 
     # 3. Khởi tạo model Logistic Regression
-    model_obj = LogisticRegression(labelCol="isFraud", featuresCol="raw_features", weightCol="weight")
+    model_obj = LogisticRegression(labelCol="isFraud", featuresCol="final_features", weightCol="weight")
     model_obj.setFeaturesCol(final_features_col)
-    
-    # print("--- Huấn luyện Model gốc ---")
-    # initial_pipeline = Pipeline(stages=stages + [model_obj])
-    # initial_model = initial_pipeline.fit(train_df)
     
     # 4. Tuning
     best_tuned_pipeline = tune_best_model(train_df, stages, model_obj)
+    
+    # Lưu Model
+    best_tuned_pipeline.write().overwrite().save(MODEL_PATH)
     
     # 5. Đánh giá và lưu kết quả
     final_preds = best_tuned_pipeline.transform(test_df)
@@ -73,11 +75,7 @@ def main():
     metrics_df = pd.DataFrame([final_res])
     header = not os.path.exists(METRIC_PATH)
     metrics_df.to_csv(METRIC_PATH, mode='a', index=False, header=header)
-    
-    # Lưu Model
-    best_tuned_pipeline.write().overwrite().save(MODEL_PATH)
-    
-    print(pd.DataFrame([final_res]).to_markdown(index=False))
+
     spark.stop()
 
 if __name__ == "__main__":

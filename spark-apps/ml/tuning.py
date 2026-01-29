@@ -23,5 +23,14 @@ def tune_best_model(train_df, stages, model_obj):
     ) 
 
     cv_model = cv.fit(train_df)
-    print(f"Tuning hoàn tất.")
-    return cv_model.bestModel
+    
+    # Lấy thông số tốt nhất
+    best_pipeline_model = cv_model.bestModel
+    # Model nằm ở stage cuối cùng của pipeline
+    best_lr_model = best_pipeline_model.stages[-1]
+    
+    print(f"--- BEST PARAMS ---")
+    print(f"RegParam: {best_lr_model._java_obj.getRegParam()}")
+    print(f"ElasticNetParam: {best_lr_model._java_obj.getElasticNetParam()}")
+    
+    return best_pipeline_model
