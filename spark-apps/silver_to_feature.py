@@ -15,11 +15,7 @@ w_dest_past = w_dest.rowsBetween(Window.unboundedPreceding, -1)
 w_dest_1h_past = w_dest.rangeBetween(-1, -1)
 w_dest_24h_past = w_dest.rangeBetween(-24, -1)
 
-q1, q3 = df.approxQuantile("amount", [0.25, 0.75], 0.01)
-iqr = q3 - q1
-LOWER_BOUND = q1 - 1.5 * iqr
-UPPER_BOUND = q3 + 1.5 * iqr
-
+df = df.filter(col("type").isin("CASH_OUT", "TRANSFER"))
 features_df = (
 df
 # -------- Balance Consistency --------
@@ -70,11 +66,10 @@ df
 .withColumn("is_all_orig_balance", F.when(F.col("amount") == F.col("oldbalanceOrg"), 1).otherwise(0))
 .withColumn("is_dest_zero_init", F.when(F.col("oldbalanceDest") == 0, 1).otherwise(0))
 .withColumn("is_org_zero_init", F.when(F.col("oldbalanceOrg") == 0, 1).otherwise(0))
+)
 
-
-# -------- Amount Outlier --------
-.withColumn("is_amount_outlier", F.when((F.col("amount") < LOWER_BOUND) | (F.col("amount") > UPPER_BOUND), 1).otherwise(0)))
-
+features_df = features_df.withColumn("orig_delta_step", F.coalesce(F.col("orig_delta_step"), F.lit(-1)))
+features_df = features_df.withColumn("dest_delta_step", F.coalesce(F.col("dest_delta_step"), F.lit(-1)))
 
 features_df = features_df.fillna(0)
 features_df.write.mode("overwrite").parquet("spark-data/feature/transaction_features")
